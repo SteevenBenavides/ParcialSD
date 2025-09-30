@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"              
+      - "--providers.docker=true"           
+      - "--entrypoints.web.address=:80"
+      - "--accesslog=true"                
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+
+  api_comercial1:
+    image: hashicorp/http-echo
+    command: ["-text=API Comercial 1"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.comercial.rule=Host(`pikachu.localhost`) && PathPrefix(`/`)"
+      - "traefik.http.services.comercial.loadbalancer.server.port=5678"
+
+
+  api_comercial2:
+    image: hashicorp/http-echo
+    command: ["-text=API Comercial 2"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.comercial.rule=Host(`pikachu.localhost`) && PathPrefix(`/`)"
+      - "traefik.http.services.comercial.loadbalancer.server.port=5678"
+
+
+  api_legendario:
+    image: hashicorp/http-echo
+    command: ["-text=API Legendario"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.legendario.rule=Host(`pikachu.localhost`) && Path(`/legendario`)"
+      - "traefik.http.routers.legendario.entrypoints=web"
+      - "traefik.http.services.legendario.loadbalancer.server.port=5678"
