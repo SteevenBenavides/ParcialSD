@@ -1,44 +1,71 @@
-version: '3.8'
-
 services:
   traefik:
     image: traefik:v2.10
     container_name: traefik
     command:
-      - "--api.insecure=true"              
-      - "--providers.docker=true"           
+      - "--api.insecure=true"          
+      - "--providers.docker=true"     
       - "--entrypoints.web.address=:80"
-      - "--accesslog=true"                
+      - "--accesslog=true"          
     ports:
       - "80:80"
-      - "8080:8080"
+      - "8080:8080"                  
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-
-  api_comercial1:
+  pikachu:
     image: hashicorp/http-echo
-    command: ["-text=API Comercial 1"]
+    command: ["-text=Pikachu API"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.comercial.rule=Host(`pikachu.localhost`) && PathPrefix(`/`)"
-      - "traefik.http.services.comercial.loadbalancer.server.port=5678"
+      - "traefik.http.routers.pikachu.rule=Host(`pikachu.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.pikachu.middlewares=strip-api@docker"
+      - "traefik.http.services.pikachu.loadbalancer.server.port=5678"
 
-
-  api_comercial2:
+  charizard:
     image: hashicorp/http-echo
-    command: ["-text=API Comercial 2"]
+    command: ["-text=Charizard API"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.comercial.rule=Host(`pikachu.localhost`) && PathPrefix(`/`)"
-      - "traefik.http.services.comercial.loadbalancer.server.port=5678"
+      - "traefik.http.routers.charizard.rule=Host(`charizard.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.charizard.middlewares=strip-api@docker"
+      - "traefik.http.services.charizard.loadbalancer.server.port=5678"
 
-
-  api_legendario:
+  bulbasaur:
     image: hashicorp/http-echo
-    command: ["-text=API Legendario"]
+    command: ["-text=Bulbasaur API"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.legendario.rule=Host(`pikachu.localhost`) && Path(`/legendario`)"
-      - "traefik.http.routers.legendario.entrypoints=web"
-      - "traefik.http.services.legendario.loadbalancer.server.port=5678"
+      - "traefik.http.routers.bulbasaur.rule=Host(`bulbasaur.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.bulbasaur.middlewares=strip-api@docker"
+      - "traefik.http.services.bulbasaur.loadbalancer.server.port=5678"
+
+ 
+  neo4j:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: "neo4j/test"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.neo4j.rule=Host(`neo4j.localhost`) && PathPrefix(`/browser`)"
+      - "traefik.http.routers.neo4j.entrypoints=web"
+      - "traefik.http.routers.neo4j.middlewares=neo4j-auth@docker"
+      - "traefik.http.services.neo4j.loadbalancer.server.port=7474"
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+	
+  strip-api:
+    image: traefik/whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
+
+  
+  neo4j-auth:
+    image: traefik/whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.neo4j-auth.basicauth.users=neo4j:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"  
+
