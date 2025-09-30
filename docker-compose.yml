@@ -52,10 +52,10 @@ services:
       - "traefik.http.routers.neo4j.middlewares=neo4j-auth@docker"
       - "traefik.http.services.neo4j.loadbalancer.server.port=7474"
     ports:
-      - "7474:7474"
+      - "7474"
       - "7687:7687"
 
-	
+
   strip-api:
     image: traefik/whoami
     labels:
@@ -69,3 +69,12 @@ services:
       - "traefik.enable=true"
       - "traefik.http.middlewares.neo4j-auth.basicauth.users=neo4j:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"  
 
+  nginx-welcome:
+    image: nginx:latest 
+    ports:
+      - "80" 
+    volumes:
+      - ./index.html:/usr/share/nginx/html 
+    depends_on:
+      - mi-app
+  
